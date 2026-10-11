@@ -7,4 +7,7 @@ const total=p.price+(+process.env.DELIVERY_FEE||0);
 await sql`INSERT INTO orders(product_id,product_name,name,phone,wilaya,address,size,color,total) VALUES(${p.id},${p.name},${b.name},${b.phone},${b.wilaya},${b.address||''},${b.size||''},${b.color||''},${total})`;
 return Response.json({ok:1,total})}
 export async function GET(q){if(!isAdmin(q))return Response.json({error:'unauthorized'},{status:401});
-return Response.json(await sql`SELECT * FROM orders ORDER BY id DESC LIMIT 200`)}
+return Response.json(await sql`SELECT * FROM orders ORDER BY id DESC LIMIT 300`)}
+export async function PATCH(q){if(!isAdmin(q))return Response.json({error:'unauthorized'},{status:401});
+const {id,status}=await q.json();if(!['new','confirmed','shipped','delivered','cancelled'].includes(status))return Response.json({error:'bad'},{status:400});
+await sql`UPDATE orders SET status=${status} WHERE id=${+id}`;return Response.json({ok:1})}

@@ -1,9 +1,10 @@
 'use client';
-import {useState,useMemo} from 'react';
+import {useState,useMemo,useEffect} from 'react';
 const fx=(u,w)=>u?u.replace('/upload/',`/upload/f_auto,q_auto,w_${w}/`):'';
 export default function Shop({products,fee}){
 const cats=useMemo(()=>['الكل',...new Set(products.map(p=>p.category))],[products]);
 const [cat,setCat]=useState('الكل'),[sel,setSel]=useState(null),[done,setDone]=useState(null),[err,setErr]=useState('');
+useEffect(()=>{const h=e=>{const t=e.target.closest('[data-cat]');if(t)setCat(t.dataset.cat)};document.addEventListener('click',h);return()=>document.removeEventListener('click',h)},[]);
 const list=products.filter(p=>cat==='الكل'||p.category===cat);
 async function send(e){e.preventDefault();setErr('');const f=Object.fromEntries(new FormData(e.target));
 const r=await fetch('/api/orders',{method:'POST',body:JSON.stringify({...f,product_id:sel.id})});const j=await r.json();
