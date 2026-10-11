@@ -6,8 +6,8 @@ let products=[];try{products=await sql`SELECT id,name,category,price,image,sizes
 return <>
 <nav className="nav"><div className="brand">تركية <b>Plus</b></div><a className="btn" href="#shop">تسوّقي الآن</a></nav>
 <header className="hero"><div className="blob b1"/><div className="blob b2"/><div className="blob b3"/>
-<div className="chips"><span className="chip" style={{top:'14%',right:'8%'}}>👠</span><span className="chip" style={{top:'62%',right:'12%',animationDelay:'-2s'}}>👜</span><span className="chip" style={{top:'22%',left:'9%',animationDelay:'-4s'}}>👗</span><span className="chip" style={{top:'70%',left:'14%',animationDelay:'-1s'}}>✨</span></div>
-<div style={{position:'relative'}}><h1><span style={{animationDelay:'0ms'}}>تركية&nbsp;</span><span className="g" style={{animationDelay:'200ms'}}>Plus</span><br/><span style={{animationDelay:'500ms'}}>أناقتكِ تبدأ هنا</span></h1>
+<div className="oval"/>
+<div style={{position:'relative'}}><h1><span className="neon">تركية</span><span className="out">PLUS</span><span className="tag">أناقتكِ تبدأ هنا</span></h1>
 <p>أحذية، حقائب وأزياء نسائية بأحدث الصيحات، بأسعار تناسبك وتوصيل إلى 58 ولاية.</p><a className="btn" href="#shop">اكتشفي المجموعة</a></div></header>
 <div className="marq"><div>{Array(8).fill('✦ أحذية ✦ حقائب ✦ أزياء ✦ الدفع عند الاستلام ✦ توصيل لـ 58 ولاية ').join('')}</div></div>
 <section className="sec"><Reveal><h2>تسوّقي حسب القسم</h2></Reveal><div className="cats">
