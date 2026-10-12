@@ -1,23 +1,31 @@
-import {sql} from '@/lib/db';import Shop from '@/components/Shop';import Reveal from '@/components/Reveal';import Count from '@/components/Count';
+import {sql} from '@/lib/db';import Shop from '@/components/Shop';import Reveal from '@/components/Reveal';import Count from '@/components/Count';import Tilt from '@/components/Tilt';
 export const dynamic='force-dynamic';
-const Q=[['كيف أطلب؟','اختاري المنتج، اضغطي عليه، املئي الاسم والهاتف والولاية ثم أكدي الطلب. سنتصل بك لتأكيده.'],['كيف أدفع؟','الدفع عند الاستلام فقط، لا حاجة لأي دفع مسبق.'],['هل التوصيل متوفر لولايتي؟','نعم، التوصيل متوفر إلى 58 ولاية.'],['أين يقع المحل؟','حي الرمال، مقابل مغازة الباشا للألبسة.']];
+const CATS=['أحذية رياضية','كعب وصنادل','حقائب يد','حقائب مدرسية وسفر','إكسسوارات'],BG=['#d4202b','#2a2b31','#9d1b24','#3b3c44','#c0392b'];
+const Q=[['كيف أطلب؟','اختاري المنتج، حدّدي المقاس واللون والكمية، املئي بياناتك واختاري ولايتك ثم أكدي. نتصل بك لتأكيد الطلب.'],['كيف أدفع؟','الدفع عند الاستلام فقط، لا حاجة لأي دفع مسبق.'],['هل التوصيل متوفر لولايتي؟','نعم، التوصيل متوفر إلى 58 ولاية.'],['أين المحل؟','حي الرمال، مقابل مغازة الباشا للألبسة، وتجدين صور المحل أسفل الصفحة.']];
 export default async function Home(){
-let products=[];try{products=await sql`SELECT id,name,category,price,image,sizes,colors FROM products WHERE COALESCE(active,TRUE)=TRUE ORDER BY id DESC`}catch(e){}
+let products=[],cs=[];try{products=await sql`SELECT id,name,category,price,image,sizes,colors FROM products WHERE COALESCE(active,TRUE)=TRUE ORDER BY id DESC`;
+cs=await sql`SELECT DISTINCT ON (category) category,image,(SELECT COUNT(*)::int FROM products p2 WHERE COALESCE(p2.active,TRUE)=TRUE AND p2.category=p.category) AS n FROM products p WHERE COALESCE(active,TRUE)=TRUE ORDER BY category,id DESC`}catch(e){}
+const cm=Object.fromEntries(cs.map(c=>[c.category,c]));
 return <>
-<nav className="nav"><div className="brand">تركية <b>Plus</b></div><a className="btn" href="#shop">تسوّقي الآن</a></nav>
-<header className="hero"><div className="blob b1"/><div className="blob b2"/><div className="blob b3"/>
-<div className="oval"/>
-<div style={{position:'relative'}}><h1><span className="neon">تركية</span><span className="out">PLUS</span><span className="tag">أناقتكِ تبدأ هنا</span></h1>
-<p>أحذية، حقائب وأزياء نسائية بأحدث الصيحات، بأسعار تناسبك وتوصيل إلى 58 ولاية.</p><a className="btn" href="#shop">اكتشفي المجموعة</a></div></header>
-<div className="marq"><div>{Array(8).fill('✦ أحذية ✦ حقائب ✦ أزياء ✦ الدفع عند الاستلام ✦ توصيل لـ 58 ولاية ').join('')}</div></div>
-<section className="sec"><Reveal><h2>تسوّقي حسب القسم</h2></Reveal><div className="cats">
-{[['c1','👠','أحذية','أحذية'],['c2','👜','حقائب','حقائب'],['c3','👗','ملابس','ملابس'],['c4','💍','إكسسوارات','إكسسوارات']].map(([c,i,t,k],n)=><Reveal key={k} d={n*120}><a href="#shop" data-cat={k} className={'cat '+c}><i>{i}</i>{t}</a></Reveal>)}</div></section>
-<section className="sec" id="shop"><Reveal><h2>أحدث المنتجات</h2></Reveal><Shop products={products} fee={+process.env.DELIVERY_FEE||0}/></section>
-<section className="sec"><Reveal><h2>لماذا تركية بلس؟</h2></Reveal><div className="feat">
-{[['🚚','توصيل سريع','إلى 58 ولاية حتى باب بيتك.'],['💵','الدفع عند الاستلام','تفحّصي طلبك ثم ادفعي.'],['💎','موديلات عصرية','تشكيلة تتجدد باستمرار.'],['💬','خدمة ودودة','نردّ على رسائلك في إنستغرام.']].map(([i,t,d],n)=><Reveal key={t} d={n*120}><div className="fc"><i>{i}</i><h3>{t}</h3><p>{d}</p></div></Reveal>)}</div></section>
-<section className="stats"><Reveal><Count to={58}/>ولاية نوصل إليها</Reveal><Reveal d={150}><Count to={7938}/>متابع على إنستغرام</Reveal><Reveal d={300}><Count to={1464}/>منشور وموديل</Reveal></section>
-<section className="sec"><Reveal><h2>طلبك في 3 خطوات</h2></Reveal><div className="steps">
-{[['اختاري','تصفّحي المجموعة وحدّدي المنتج.'],['أكدي','املئي بياناتك واضغطي تأكيد.'],['استلمي','ندفع عند الاستلام، وصلك الطلب.']].map(([t,d],n)=><Reveal key={t} d={n*150}><div className="st"><h3>{t}</h3><p>{d}</p></div></Reveal>)}</div></section>
-<section className="sec"><Reveal><h2>أسئلة شائعة</h2></Reveal>{Q.map(([q,a])=><Reveal key={q}><details><summary>{q}</summary><p>{a}</p></details></Reveal>)}</section>
-<section className="sec"><Reveal><div className="cta"><h2>جاهزة لإطلالتكِ الجديدة؟</h2><p style={{margin:'10px 0 20px'}}>تابعينا على إنستغرام لأحدث الوصولات.</p><a className="btn" href="https://instagram.com/tourkia_plus_01">@tourkia_plus_01</a></div></Reveal></section>
-<footer><div className="brand" style={{color:'#fff'}}>تركية Plus</div>حي الرمال، مقابل مغازة الباشا للألبسة<br/><a href="https://instagram.com/tourkia_plus_01">@tourkia_plus_01</a> · <a href="https://instagram.com/tourkia_plus02">@tourkia_plus02</a></footer></>}
+<div className="top">توصيل إلى 58 ولاية · الدفع عند الاستلام</div>
+<nav className="nav"><a className="logo" href="#"><img src="/logo.webp" alt="تركية بلس"/><span className="brand">تركية <b>Plus</b></span></a><div className="links"><a href="#shop">المنتجات</a><a href="#cats">الأقسام</a><a href="#visit">المحل</a><a href="#faq">أسئلة</a></div><a className="btn sm" href="#shop">تسوّقي</a></nav>
+<header className="hero"><div><p className="eye">حي الرمال · تركية بلس</p>
+<h1><span className="w" style={{animationDelay:'0ms'}}>أحذية وحقائب</span><br/><span className="w" style={{animationDelay:'150ms'}}>بأحدث </span><em className="w" style={{animationDelay:'300ms'}}>الموديلات</em></h1>
+<p className="sub">أحذية رياضية، كعب وصنادل، حقائب يد ومدرسية وسفر وإكسسوارات. اختاري، اطلبي، وادفعي عند الاستلام.</p>
+<div className="acts"><a className="btn" href="#shop">تسوّقي الآن</a><a className="btn ghost" href="#visit">زوري المحل</a></div></div>
+<Tilt className="pic"><div className="ov"><img src="/store.jpg" alt="محل تركية بلس"/></div>
+<svg className="badge" viewBox="0 0 120 120"><circle cx="60" cy="60" r="58" fill="#d4202b"/><defs><path id="c" d="M60 60m-42 0a42 42 0 1 1 84 0a42 42 0 1 1-84 0"/></defs><text fill="#fff" fontSize="11" fontWeight="700" letterSpacing="2.4"><textPath href="#c">TOURKIA PLUS • SHOES • BAGS • </textPath></text><text x="60" y="68" textAnchor="middle" fill="#fff" fontSize="26" fontFamily="Changa" fontWeight="800">58</text></svg>
+<div className="chip2" style={{top:'8%',right:'-4%'}}>الدفع عند الاستلام</div><div className="chip2" style={{bottom:'20%',right:'-6%',animationDelay:'-2s'}}>أحذية · حقائب · إكسسوارات</div></Tilt></header>
+<div className="marq"><div>{Array(6).fill('SHOES ✦ أحذية ✦ BAGS ✦ حقائب ✦ ACCESSORIES ✦ إكسسوارات ✦ TOURKIA PLUS ✦ ').join('')}</div></div>
+<section className="sec" id="cats"><Reveal><p className="eye">الأقسام</p><h2>اختاري قسمك</h2></Reveal><div className="tiles">
+{CATS.map((c,i)=>{const d=cm[c];return <Reveal key={c} d={i*100}><a href="#shop" data-cat={c} className="tile" style={{background:BG[i]}}>{d&&d.image&&<img src={d.image.replace('/upload/','/upload/f_auto,q_auto,w_500/')} alt={c} loading="lazy"/>}<div><h3>{c}</h3><small>{d?d.n+' منتج':'قريباً'}</small></div><span className="ar">←</span></a></Reveal>})}</div></section>
+<section className="sec" id="shop"><Reveal><p className="eye">المتجر</p><h2>تسوّقي الآن</h2></Reveal><Shop products={products} fee={+process.env.DELIVERY_FEE||0}/></section>
+<section className="sec"><Reveal><p className="eye">لماذا نحن</p><h2>تسوّقي بثقة</h2></Reveal><div className="bento">
+<Reveal><div className="bc red"><Count to={58}/><p>ولاية يصلها التوصيل</p></div></Reveal><Reveal d={100}><div className="bc dark"><h3>الدفع عند الاستلام</h3><p>تستلمين طلبك ثم تدفعين، دون أي دفع مسبق.</p></div></Reveal>
+<Reveal d={200}><div className="bc"><h3>محل حقيقي</h3><p>في حي الرمال، تجدين فيه المنتجات وتجرّبينها.</p></div></Reveal><Reveal d={300}><div className="bc"><h3>تشكيلة واسعة</h3><p>أحذية رياضية وكعب وصنادل وحقائب وإكسسوارات في مكان واحد.</p></div></Reveal></div></section>
+<section className="sec" id="visit"><Reveal><p className="eye">المحل</p><h2>زوري تركية بلس</h2></Reveal><div className="visit"><Reveal><img className="ph" src="/store.jpg" alt="واجهة المحل"/></Reveal><Reveal d={150}><img className="ph tall" src="/inside.jpg" alt="داخل المحل"/></Reveal>
+<Reveal d={250}><div className="addr"><h3>العنوان</h3><p>حي الرمال، مقابل مغازة الباشا للألبسة.</p><a className="btn" href="https://instagram.com/tourkia_plus_01">@tourkia_plus_01</a> <a className="btn ghost" href="https://instagram.com/tourkia_plus02">@tourkia_plus02</a></div></Reveal></div></section>
+<section className="sec"><Reveal><p className="eye">الطلب</p><h2>3 خطوات فقط</h2></Reveal><div className="steps">{[['اختاري','قسمك ثم المنتج.'],['أكدي','المقاس، اللون، الولاية.'],['استلمي وادفعي','الدفع عند الاستلام.']].map(([t,d],n)=><Reveal key={t} d={n*150}><div className="st"><h3>{t}</h3><p>{d}</p></div></Reveal>)}</div></section>
+<section className="sec" id="faq"><Reveal><p className="eye">أسئلة</p><h2>أسئلة شائعة</h2></Reveal>{Q.map(([q,a])=><Reveal key={q}><details><summary>{q}</summary><p>{a}</p></details></Reveal>)}</section>
+<section className="sec"><Reveal><div className="cta"><img src="/logo.webp" alt=""/><h2>جاهزة لخطوتك الجديدة؟</h2><a className="btn light" href="#shop">تسوّقي الآن</a></div></Reveal></section>
+<footer><img src="/logo.webp" alt="" width="90"/><p>تركية بلس · حي الرمال، مقابل مغازة الباشا للألبسة</p><p><a href="https://instagram.com/tourkia_plus_01">@tourkia_plus_01</a> · <a href="https://instagram.com/tourkia_plus02">@tourkia_plus02</a></p></footer></>}
