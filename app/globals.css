@@ -68,3 +68,5 @@ input,select{width:100%;padding:12px 14px;margin:5px 0;border:1.5px solid var(--
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv,.w{opacity:1!important;transform:none!important}}
 :focus-visible{outline:3px solid var(--red);outline-offset:2px}
 .lb+.cw,.up{margin-bottom:4px}
+.btn.wab{background:#25d366;box-shadow:0 10px 24px #25d36655}
+.wa{position:fixed!important;bottom:18px;left:18px;z-index:40;background:#25d366;color:#fff;font-weight:700;text-decoration:none;padding:13px 22px;border-radius:99px;box-shadow:0 10px 26px #25d36677;animation:pulse 2.4s infinite}@keyframes pulse{50%{box-shadow:0 0 0 14px #25d36633}}
