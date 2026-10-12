@@ -1,39 +1,49 @@
 'use client';
 import {useState} from 'react';
 const ST={new:'جديد',confirmed:'مؤكد',shipped:'تم الشحن',delivered:'تم التسليم',cancelled:'ملغى'};
-const CAT={'أحذية رياضية':{i:'👟',s:['35','36','37','38','39','40','41','42','43','44','45'],n:['حذاء رياضي','سنيكرز','حذاء جري','حذاء كاجوال']},
-'كعب وصنادل':{i:'👠',s:['35','36','37','38','39','40','41','42'],n:['كعب عالٍ','صندل','بالرينا','شبشب','بوت','حذاء رسمي']},
-'حقائب يد':{i:'👜',s:[],n:['حقيبة يد','حقيبة كتف','محفظة','حقيبة سهرة','حقيبة كروس']},
-'حقائب مدرسية وسفر':{i:'🎒',s:[],n:['محفظة مدرسية','حقيبة ظهر','حقيبة سفر','حقيبة عجلات','مقلمة']},
-'إكسسوارات':{i:'💍',s:[],n:['ساعة','نظارة','حزام','عقد','سوار','وشاح']}};
+const CAT={'أحذية رياضية':{s:['35','36','37','38','39','40','41','42','43','44','45'],n:['حذاء رياضي','سنيكرز','حذاء جري','حذاء كاجوال']},
+'كعب وصنادل':{s:['35','36','37','38','39','40','41','42'],n:['كعب عالٍ','صندل','بالرينا','شبشب','بوت','حذاء رسمي']},
+'حقائب يد':{s:[],n:['حقيبة يد','حقيبة كتف','محفظة','حقيبة سهرة','حقيبة كروس']},
+'حقائب مدرسية وسفر':{s:[],n:['محفظة مدرسية','حقيبة ظهر','حقيبة سفر','حقيبة عجلات','مقلمة']},
+'إكسسوارات':{s:[],n:['ساعة','نظارة','حزام','عقد','سوار','وشاح']}};
 const COL=[['أسود','#111'],['أبيض','#fff'],['بيج','#d9c3a0'],['بني','#6b4226'],['أحمر','#d92b2b'],['وردي','#f48fb1'],['أزرق','#2a5bd7'],['كحلي','#1b2a52'],['أخضر','#2e8b57'],['ذهبي','#d4af37'],['فضي','#c0c0c0'],['رمادي','#888']];
+const L=s=>s?s.split(',').map(x=>x.trim()).filter(Boolean):[];
 const tg=(a,v)=>a.includes(v)?a.filter(x=>x!==v):[...a,v];
+const blank={name:'',category:'',price:'',old:'',desc:'',sz:[],cl:[],imgs:[]};
 export default function Admin(){
-const [pw,setPw]=useState(''),[ok,setOk]=useState(false),[tab,setTab]=useState('p'),[o,setO]=useState([]),[p,setP]=useState([]),[msg,setMsg]=useState('');
-const [cat,setCat]=useState(''),[name,setName]=useState(''),[price,setPrice]=useState(''),[sz,setSz]=useState([]),[cl,setCl]=useState([]),[file,setFile]=useState(null),[busy,setBusy]=useState(false);
-const H={'x-admin':pw};
-const load=async()=>{const a=await fetch('/api/orders',{headers:H});if(!a.ok)return false;setO(await a.json());setP(await(await fetch('/api/products')).json());return true};
+const [pw,setPw]=useState(''),[ok,setOk]=useState(false),[tab,setTab]=useState('p'),[o,setO]=useState([]),[p,setP]=useState([]),[msg,setMsg]=useState(''),[mode,setMode]=useState('list'),[eid,setEid]=useState(null),[f,setF]=useState(blank),[busy,setBusy]=useState(false),[flt,setFlt]=useState('all');
+const H={'x-admin':pw},set=(k,v)=>setF(x=>({...x,[k]:v}));
+const load=async()=>{const a=await fetch('/api/orders',{headers:H,cache:'no-store'});if(!a.ok)return false;setO(await a.json());setP(await(await fetch('/api/products?t='+Date.now(),{cache:'no-store'})).json());return true};
 async function login(){(await load())?setOk(true):setMsg('كلمة السر خاطئة')}
 async function st(id,status){await fetch('/api/orders',{method:'PATCH',headers:H,body:JSON.stringify({id,status})});load()}
-async function del(id){if(!confirm('حذف المنتج؟'))return;await fetch('/api/products',{method:'DELETE',headers:H,body:JSON.stringify({id})});load()}
-async function add(){if(!cat||!name||!price||!file)return setMsg('اختاري الفئة والاسم والسعر والصورة');
-setBusy(true);setMsg('جارٍ الرفع…');const x=new FormData();x.append('file',file);
-const u=await(await fetch('/api/upload',{method:'POST',headers:H,body:x})).json();
-const r=await fetch('/api/products',{method:'POST',headers:H,body:JSON.stringify({name,category:cat,price,sizes:sz.join(','),colors:cl.join(','),image:u.url})});
-setBusy(false);setMsg(r.ok?'تم نشر المنتج ✓':'فشل النشر');if(r.ok){setName('');setPrice('');setSz([]);setCl([]);setFile(null);load()}}
+async function tog(id,field,value){await fetch('/api/products',{method:'PATCH',headers:H,body:JSON.stringify({id,field,value})});load()}
+async function del(x){if(!confirm('حذف «'+x.name+'» نهائياً من الموقع؟'))return;const r=await(await fetch('/api/products',{method:'DELETE',headers:H,body:JSON.stringify({id:x.id})})).json();setMsg(r.ok?'تم حذف المنتج':'تعذر الحذف');load()}
+function edit(x){setF({name:x.name,category:x.category,price:x.price,old:x.old_price||'',desc:x.description||'',sz:L(x.sizes),cl:L(x.colors),imgs:[x.image,...L(x.images)].filter(Boolean).map(u=>({url:u}))});setEid(x.id);setMode('form');setMsg('');scrollTo(0,0)}
+function add(){setF(blank);setEid(null);setMode('form');setMsg('');scrollTo(0,0)}
+async function save(){if(!f.category||!f.name||!f.price||!f.imgs.length)return setMsg('أكملي: الفئة والاسم والسعر وصورة واحدة على الأقل');
+setBusy(true);setMsg('جارٍ الحفظ…');try{const urls=[];for(const im of f.imgs){if(im.url){urls.push(im.url);continue}const x=new FormData();x.append('file',im.file);const u=await(await fetch('/api/upload',{method:'POST',headers:H,body:x})).json();if(!u.url)throw 0;urls.push(u.url)}
+const body={id:eid,name:f.name,category:f.category,price:f.price,old_price:f.old,description:f.desc,sizes:f.sz.join(','),colors:f.cl.join(','),image:urls[0],images:urls.slice(1).join(',')};
+const r=await fetch('/api/products',{method:eid?'PUT':'POST',headers:H,body:JSON.stringify(body)});if(!r.ok)throw 0;setMsg(eid?'تم حفظ التعديلات':'تم نشر المنتج');setMode('list');await load()}catch(e){setMsg('فشل الحفظ، حاولي مجدداً')}setBusy(false)}
 if(!ok)return <div className="adm"><section><h3>لوحة الإدارة</h3><input type="password" placeholder="كلمة السر" onChange={e=>setPw(e.target.value)}/><button className="btn" onClick={login}>دخول</button><p>{msg}</p></section></div>;
-const live=o.filter(x=>x.status!=='cancelled'),rev=o.filter(x=>x.status==='delivered').reduce((a,x)=>a+x.total,0),C=CAT[cat];
+const rev=o.filter(x=>x.status==='delivered').reduce((a,x)=>a+x.total,0),C=CAT[f.category];
 const T=[['s','نظرة عامة'],['o','الطلبات ('+o.length+')'],['p','المنتجات ('+p.length+')']];
-return <div className="adm"><div className="dtabs">{T.map(([k,t])=><button key={k} className={'tab'+(tab===k?' on':'')} onClick={()=>setTab(k)}>{t}</button>)}</div>
-{tab==='s'&&<div className="dash">{[['الطلبات',o.length],['طلبات جديدة',o.filter(x=>x.status==='new').length],['المنتجات',p.length],['إيراد المسلَّم',rev+' د.ج'],['قيد المتابعة',live.filter(x=>x.status!=='delivered').length]].map(([t,v])=><div className="sc" key={t}>{t}<b>{v}</b></div>)}</div>}
-{tab==='o'&&(o.length?o.map(x=><div className="oc" key={x.id}><b>{x.product_name}</b> {x.size} {x.color} — {x.total} د.ج<br/>{x.name} · <a href={'tel:'+x.phone}>{x.phone}</a> · {x.wilaya} {x.address}<br/><select value={x.status} onChange={e=>st(x.id,e.target.value)}>{Object.entries(ST).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div>):<p>لا طلبات بعد.</p>)}
-{tab==='p'&&<><section><h3>إضافة منتج</h3>
-<p className="lb">١. الفئة</p><div className="cw">{Object.entries(CAT).map(([k,v])=><button key={k} className={'chp'+(cat===k?' on':'')} onClick={()=>{setCat(k);setSz([]);setName('')}}>{v.i} {k}</button>)}</div>
-{C&&<><p className="lb">٢. النوع</p><div className="cw">{C.n.map(n=><button key={n} className={'chp'+(name===n?' on':'')} onClick={()=>setName(n)}>{n}</button>)}</div><input value={name} onChange={e=>setName(e.target.value)} placeholder="أو عدّلي الاسم (مثال: حذاء رياضي أبيض)"/>
-{C.s.length>0&&<><p className="lb">٣. المقاسات المتوفرة</p><div className="cw">{C.s.map(s=><button key={s} className={'chp'+(sz.includes(s)?' on':'')} onClick={()=>setSz(tg(sz,s))}>{s}</button>)}</div></>}
-<p className="lb">٤. الألوان المتوفرة</p><div className="cw">{COL.map(([n,h])=><button key={n} className={'sw'+(cl.includes(n)?' on':'')} onClick={()=>setCl(tg(cl,n))}><span style={{background:h}}/>{n}</button>)}</div>
-<p className="lb">٥. السعر (د.ج)</p><div className="cw"><button className="chp" onClick={()=>setPrice(Math.max(0,(+price||0)-500))}>− 500</button><input style={{flex:1,minWidth:100}} type="number" inputMode="numeric" value={price} onChange={e=>setPrice(e.target.value)} placeholder="0"/><button className="chp" onClick={()=>setPrice((+price||0)+500)}>+ 500</button></div>
-<p className="lb">٦. الصورة</p><label className="up">{file?<img src={URL.createObjectURL(file)} alt=""/>:<span>📷 اضغطي لاختيار صورة</span>}<input hidden type="file" accept="image/*" onChange={e=>setFile(e.target.files[0])}/></label>
-<button className="btn" style={{width:'100%',marginTop:14}} disabled={busy} onClick={add}>نشر المنتج</button></>}
-<p style={{marginTop:8}}>{msg}</p></section>
-{p.map(x=><div className="pr" key={x.id}><img src={x.image} alt=""/><div>{x.name}<br/><small>{x.category} · {x.price} د.ج</small></div><button onClick={()=>del(x.id)}>حذف</button></div>)}</>}</div>}
+const ol=o.filter(x=>flt==='all'||x.status===flt);
+return <div className="adm"><div className="dtabs">{T.map(([k,t])=><button key={k} className={'tab'+(tab===k?' on':'')} onClick={()=>{setTab(k);setMode('list')}}>{t}</button>)}</div>
+{tab==='s'&&<div className="dash">{[['الطلبات',o.length],['طلبات جديدة',o.filter(x=>x.status==='new').length],['المنتجات',p.length],['نفد المخزون',p.filter(x=>!x.in_stock).length],['منتجات مميزة',p.filter(x=>x.featured).length],['إيراد المسلَّم',rev+' د.ج']].map(([t,v])=><div className="sc" key={t}>{t}<b>{v}</b></div>)}</div>}
+{tab==='o'&&<><div className="cw" style={{marginBottom:12}}>{[['all','الكل'],...Object.entries(ST)].map(([k,v])=><button key={k} className={'chp'+(flt===k?' on':'')} onClick={()=>setFlt(k)}>{v}</button>)}</div>
+{ol.length?ol.map(x=><div className="oc" key={x.id}><b>{x.product_name}</b> × {x.qty||1} {x.size} {x.color} · {x.total} د.ج<br/>{x.name} · <a href={'tel:'+x.phone}>{x.phone}</a> · {x.wilaya} {x.address}<br/><small>{new Date(x.created_at).toLocaleString('ar-DZ')}</small><br/><select value={x.status} onChange={e=>st(x.id,e.target.value)}>{Object.entries(ST).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></div>):<p>لا طلبات.</p>}</>}
+{tab==='p'&&mode==='list'&&<><button className="btn" style={{width:'100%',marginBottom:12}} onClick={add}>إضافة منتج جديد</button><p style={{marginBottom:8}}>{msg}</p>
+{p.map(x=><div className="pr" key={x.id}><img src={x.image} alt=""/><div>{x.name}<br/><small>{x.category} · {x.price} د.ج{x.old_price>x.price?' (قبل: '+x.old_price+')':''}</small></div>
+<div className="ac"><button className="ed" onClick={()=>edit(x)}>تعديل</button><button className={'tg '+(x.in_stock?'on':'off')} onClick={()=>tog(x.id,'in_stock',!x.in_stock)}>{x.in_stock?'متوفر':'نفد'}</button><button className={'tg'+(x.featured?' on':'')} onClick={()=>tog(x.id,'featured',!x.featured)}>{x.featured?'مميز':'غير مميز'}</button><button className="dl" onClick={()=>del(x)}>حذف</button></div></div>)}{!p.length&&<p>لا منتجات بعد.</p>}</>}
+{tab==='p'&&mode==='form'&&<section><h3>{eid?'تعديل المنتج':'منتج جديد'}</h3>
+<p className="lb">الفئة</p><div className="cw">{Object.keys(CAT).map(k=><button key={k} className={'chp'+(f.category===k?' on':'')} onClick={()=>setF(x=>({...x,category:k,sz:[]}))}>{k}</button>)}</div>
+{f.category&&<><p className="lb">الاسم</p><div className="cw">{(C?C.n:[]).map(n=><button key={n} className={'chp'+(f.name===n?' on':'')} onClick={()=>set('name',n)}>{n}</button>)}</div><input value={f.name} onChange={e=>set('name',e.target.value)} placeholder="اسم المنتج (يمكنك تعديله، مثال: حذاء رياضي أبيض)"/>
+{C&&C.s.length>0&&<><p className="lb">المقاسات المتوفرة</p><div className="cw">{C.s.map(s=><button key={s} className={'chp'+(f.sz.includes(s)?' on':'')} onClick={()=>set('sz',tg(f.sz,s))}>{s}</button>)}</div></>}
+<p className="lb">الألوان المتوفرة</p><div className="cw">{COL.map(([n,h])=><button key={n} className={'sw'+(f.cl.includes(n)?' on':'')} onClick={()=>set('cl',tg(f.cl,n))}><span style={{background:h}}/>{n}</button>)}</div>
+<p className="lb">السعر (د.ج)</p><div className="cw"><button className="chp" onClick={()=>set('price',Math.max(0,(+f.price||0)-500))}>- 500</button><input style={{flex:1,minWidth:100}} type="number" inputMode="numeric" value={f.price} onChange={e=>set('price',e.target.value)} placeholder="0"/><button className="chp" onClick={()=>set('price',(+f.price||0)+500)}>+ 500</button></div>
+<p className="lb">السعر قبل التخفيض (اختياري، يظهر مشطوباً مع نسبة التخفيض)</p><div className="cw"><button className="chp" onClick={()=>set('old',Math.max(0,(+f.old||+f.price||0)-500))}>- 500</button><input style={{flex:1,minWidth:100}} type="number" inputMode="numeric" value={f.old} onChange={e=>set('old',e.target.value)} placeholder="بدون تخفيض"/><button className="chp" onClick={()=>set('old',(+f.old||+f.price||0)+500)}>+ 500</button><button className="chp" onClick={()=>set('old','')}>إلغاء</button></div>
+<p className="lb">وصف قصير (اختياري)</p><textarea value={f.desc} onChange={e=>set('desc',e.target.value)} placeholder="مثال: خامة مريحة، نعل طبي…"/>
+<p className="lb">الصور (الأولى هي الرئيسية)</p><div className="gl">{f.imgs.map((im,i)=><div key={i}><img src={im.url||URL.createObjectURL(im.file)} alt=""/>{i===0&&<small>رئيسية</small>}{i>0&&<button onClick={()=>set('imgs',[im,...f.imgs.filter((_,j)=>j!==i)])}>اجعلها رئيسية</button>}<button onClick={()=>set('imgs',f.imgs.filter((_,j)=>j!==i))}>حذف</button></div>)}</div>
+{f.imgs.length<6&&<label className="up"><span>إضافة صور (حتى 6)</span><input hidden type="file" accept="image/*" multiple onChange={e=>set('imgs',[...f.imgs,...[...e.target.files].map(file=>({file}))].slice(0,6))}/></label>}
+<button className="btn" style={{width:'100%',marginTop:14}} disabled={busy} onClick={save}>{eid?'حفظ التعديلات':'نشر المنتج'}</button></>}
+<button className="chp" style={{marginTop:10}} onClick={()=>setMode('list')}>رجوع للقائمة</button><p style={{marginTop:8}}>{msg}</p></section>}</div>}
