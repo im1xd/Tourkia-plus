@@ -1,0 +1,2 @@
+'use client';
+export default function G({error,reset}){return <html lang="ar" dir="rtl"><body style={{fontFamily:'sans-serif',padding:'60px 6vw',textAlign:'center'}}><h2>حدث خطأ غير متوقع</h2><button onClick={()=>reset()} style={{padding:'12px 28px',borderRadius:99,border:0,background:'#d4202b',color:'#fff',fontSize:16,margin:'16px 0'}}>إعادة المحاولة</button><p dir="ltr" style={{fontSize:12,color:'#999'}}>{String(error&&error.message||'')}</p></body></html>}

@@ -1,0 +1,2 @@
+'use client';
+export default function Error({error,reset}){return <div style={{padding:'60px 6vw',textAlign:'center'}}><h2>حدث خطأ غير متوقع</h2><p style={{margin:'10px 0 20px',color:'#6b6b73'}}>جرّبي إعادة المحاولة. إن تكرر الأمر أرسلي لنا لقطة شاشة لهذه الصفحة.</p><button className="btn" onClick={()=>reset()}>إعادة المحاولة</button><p dir="ltr" style={{marginTop:20,fontSize:12,color:'#999'}}>{String(error&&error.message||'')}</p></div>}

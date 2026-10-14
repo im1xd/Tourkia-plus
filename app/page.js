@@ -6,7 +6,7 @@ export default async function Home(){
 let products=[],cs=[],bn=[];try{products=await sql`SELECT id,name,category,price,old_price,image,images,sizes,colors,description,in_stock,featured FROM products WHERE COALESCE(active,TRUE)=TRUE ORDER BY featured DESC,id DESC`;
 bn=await sql`SELECT id,image,title FROM banners ORDER BY id DESC`;
 cs=await sql`SELECT DISTINCT ON (category) category,image,(SELECT COUNT(*)::int FROM products p2 WHERE COALESCE(p2.active,TRUE)=TRUE AND p2.category=p.category) AS n FROM products p WHERE COALESCE(active,TRUE)=TRUE ORDER BY category,id DESC`}catch(e){}
-const row=bn.length?Array.from({length:Math.ceil(8/bn.length)},()=>bn).flat():[],hero=bn[0]?bn[0].image.replace('/upload/','/upload/f_auto,q_auto,w_900/'):'/store.jpg';
+const hero=bn[0]?bn[0].image.replace('/upload/','/upload/f_auto,q_auto,w_900/'):'/store.jpg';
 const cm=Object.fromEntries(cs.map(c=>[c.category,c]));
 return <>
 <div className="top">توصيل إلى 58 ولاية · الدفع عند الاستلام</div>
@@ -19,7 +19,7 @@ return <>
 <svg className="badge" viewBox="0 0 120 120"><circle cx="60" cy="60" r="58" fill="#d4202b"/><defs><path id="c" d="M60 60m-42 0a42 42 0 1 1 84 0a42 42 0 1 1-84 0"/></defs><text fill="#fff" fontSize="11" fontWeight="700" letterSpacing="2.4"><textPath href="#c">TOURKIA PLUS • SHOES • BAGS • </textPath></text><text x="60" y="68" textAnchor="middle" fill="#fff" fontSize="26" fontFamily="Changa" fontWeight="800">58</text></svg>
 <div className="chip2" style={{top:'8%',right:'-4%'}}>الدفع عند الاستلام</div><div className="chip2" style={{bottom:'20%',right:'-6%',animationDelay:'-2s'}}>أحذية · حقائب · إكسسوارات</div></Tilt></header>
 <div className="marq"><div>{Array(6).fill('SHOES • أحذية • BAGS • حقائب • ACCESSORIES • إكسسوارات • TOURKIA PLUS • ').join('')}</div></div>
-{bn.length>0&&<section className="look"><Reveal><div className="sec" style={{paddingBottom:0}}><p className="eye">لوك بوك</p><h2>إطلالات الموسم</h2></div></Reveal><div className="track">{[...row,...row].map((b,i)=><figure key={i} className="lk"><img src={b.image.replace('/upload/','/upload/f_auto,q_auto,w_700/')} alt={b.title||'إطلالة'} loading="lazy"/>{b.title&&<figcaption>{b.title}</figcaption>}</figure>)}</div></section>}
+{bn.length>0&&<section className="look"><Reveal><div className="sec" style={{paddingBottom:0}}><p className="eye">لوك بوك</p><h2>إطلالات الموسم</h2></div></Reveal><div className={'track'+(bn.length>=4?' mq':'')}>{(bn.length>=4?[...bn,...bn]:bn).map((b,i)=><figure key={i} className="lk"><img src={b.image.replace('/upload/','/upload/f_auto,q_auto,w_700/')} alt={b.title||'إطلالة'} decoding="async"/>{b.title&&<figcaption>{b.title}</figcaption>}</figure>)}</div></section>}
 <section className="sec" id="cats"><Reveal><p className="eye">الأقسام</p><h2>اختاري قسمك</h2></Reveal><div className="tiles">
 {CATS.map((c,i)=>{const d=cm[c];return <Reveal key={c} d={i*100}><a href="#shop" data-cat={c} aria-label={c} className="tile" style={{background:BG[i]}}>{d&&d.image&&<img src={d.image.replace('/upload/','/upload/f_auto,q_auto,w_500/')} alt={c} loading="lazy"/>}<div><h3>{c}</h3><small>{d?d.n+' منتج':'قريباً'}</small></div><span className="ar"><Ic.arrow s={18}/></span></a></Reveal>})}</div></section>
 <section className="sec" id="shop"><Reveal><p className="eye">المتجر</p><h2>تسوّقي الآن</h2></Reveal><Shop products={products} fee={+process.env.DELIVERY_FEE||0}/></section>
