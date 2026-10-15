@@ -46,7 +46,22 @@ return <>
 {L(sel.colors).length>0&&<><p className="lb">اللون</p><div className="cw">{L(sel.colors).map(s=><button type="button" key={s} aria-pressed={cl===s} className={'chp'+(cl===s?' on':'')} onClick={()=>setCl(s)}>{s}</button>)}</div></>}
 <p className="lb">الكمية</p><div className="cw"><button type="button" className="chp" aria-label="إنقاص الكمية" onClick={()=>setQty(Math.max(1,qty-1))}>−</button><b style={{minWidth:30,textAlign:'center'}}>{qty}</b><button type="button" className="chp" aria-label="زيادة الكمية" onClick={()=>setQty(Math.min(10,qty+1))}>+</button></div>
 <p className="lb">بيانات التوصيل</p><input name="name" placeholder="الاسم الكامل" required/><input name="phone" placeholder="رقم الهاتف 07XXXXXXXX" inputMode="tel" required/>
-<select value={wl} onChange={e=>setWl(e.target.value.split(' - ')[1])} required><option value="">اختاري الولاية</option>{W.map(w=><option key={w}>{w}</option>)}</select><input name="address" placeholder="البلدية / الحي (اختياري)"/>
+
+<select
+  value={wl}
+  onChange={e => setWl(e.target.value)}
+  required
+>
+  <option value="">اختاري الولاية</option>
+  {W.map(w => (
+    <option key={w} value={w.split(' - ')[1]}>
+      {w}
+    </option>
+  ))}
+</select>
+
+
+<input name="address" placeholder="البلدية / الحي (اختياري)"/>
 <div className="sum"><span>المنتج × {qty}</span><span>{sel.price*qty} د.ج</span><span>التوصيل</span><span>{fee} د.ج</span><b>المجموع</b><b>{sel.price*qty+fee} د.ج</b></div>
 {err&&<p className="er">{err}</p>}<button className="btn" disabled={busy||!sel.in_stock} style={{width:'100%'}}>{!sel.in_stock?'نفد من المخزون':busy?'جارٍ الإرسال…':'تأكيد الطلب · الدفع عند الاستلام'}</button>
 <a className="btn wab" href={waO} target="_blank" rel="noopener" style={{width:'100%',marginTop:8}}><Ic.chat s={18}/>أو اطلبي عبر واتساب</a></form></div>}
